@@ -120,7 +120,7 @@ class NotesController extends Controller
             return response(null, 403);
         }
         $note->delete();
-
-        return response()->json(['message' => 'Note is deleted !']);
+        return response(null);
+        //return response()->json(['message' => 'Note is deleted !']);
     }
 }
