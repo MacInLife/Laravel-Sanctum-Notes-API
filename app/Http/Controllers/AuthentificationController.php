@@ -8,6 +8,8 @@ use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Notes;
+use Illuminate\Support\Facades\Artisan;
 
 class AuthentificationController extends Controller
 {
@@ -53,6 +55,13 @@ class AuthentificationController extends Controller
             $token = $user->createToken('token-login')->plainTextToken;
             return response()->json(['token' => $token ]);
     
+    }
+
+    public function reset()
+    {
+        Artisan::call("migrate:refresh", ["--force" => true]);
+        //$account = $notes->where('user_id', '=', $request->user()->id)->delete();
+        return response()->json(['message' => 'All Account, Token & Notes is deleted ! Reset Base']);
     }
 
    

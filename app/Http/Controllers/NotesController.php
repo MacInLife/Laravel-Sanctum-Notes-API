@@ -12,10 +12,11 @@ class NotesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        
+        $notes =  Notes::where('user_id', $request->user()->id)->with('user')->orderBy('created_at', 'desc')->get();
+    
+        return response()->json(['notes' => $notes]);
     }
 
     /**
@@ -34,9 +35,22 @@ class NotesController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, Notes $note)
     {
         //
+         $request->validate([
+            'content' => 'required',
+        ]);
+
+        //Création
+        $note = new Notes;
+        $note->user_id = $request->user()->id;
+        $note->content = $request->content;
+        $note->save();
+        $note->with('user')->get();
+
+        //Redirection
+        return response()->json(['note' => $note]);
     }
 
     /**
@@ -45,9 +59,15 @@ class NotesController extends Controller
      * @param  \App\Notes  $notes
      * @return \Illuminate\Http\Response
      */
-    public function show(Notes $notes)
+    public function show($id, Request $request)
     {
         //
+        $note = Notes::findOrFail($id);
+        if($note->user_id != $request->user()->id){
+            return response(null, 403);
+        }
+        return response()->json(['note' => $note]);
+
     }
 
     /**
@@ -68,9 +88,22 @@ class NotesController extends Controller
      * @param  \App\Notes  $notes
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Notes $notes)
+    public function update($id, Request $request, Notes $note)
     {
         //
+        $request->validate([
+            'content' => 'required'
+        ]);
+
+        $note = Notes::findOrFail($id);
+        if($note->user_id != $request->user()->id){
+            return response(null, 403);
+        }
+        $note->content = $request->content;
+        $note->save();
+
+       
+        return response()->json(['note' => $note]);
     }
 
     /**
@@ -79,8 +112,15 @@ class NotesController extends Controller
      * @param  \App\Notes  $notes
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Notes $notes)
+    public function destroy($id, Request $request)
     {
         //
+        $note = Notes::findOrFail($id);
+        if($note->user_id != $request->user()->id){
+            return response(null, 403);
+        }
+        $note->delete();
+
+        return response()->json(['message' => 'Note is deleted !']);
     }
 }

@@ -23,8 +23,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::group(['middleware' => ['auth:sanctum']], function (){
    //Routes notes
+   Route::apiResource('/notes', 'NotesController');
    Route::get('/notes', 'NotesController@index');
+   Route::get('/notes/{id}', 'NotesController@show');
+   Route::post('/notes', 'NotesController@store');
+   Route::post('/notes/{id}', 'NotesController@update');
+   Route::delete('/notes/{id}', 'NotesController@destroy');
+ 
 });
 //Pas de verif Auth
 Route::post('/register', 'AuthentificationController@register');
 Route::post('/login', 'AuthentificationController@login');
+Route::delete('/reset', 'AuthentificationController@reset');

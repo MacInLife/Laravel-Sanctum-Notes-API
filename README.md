@@ -73,7 +73,7 @@ Vous devez créer une migration pour la création de cette table dans votre base
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->integer('user_id')->unique()->unsigned();
+            $table->integer('user_id')->unsigned();
             $table->text('content');
         });
     }
@@ -211,18 +211,30 @@ Cette route permet de lister ses notes, dans l’ordre anti-chronologique de cr�
 
 Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization` .
 
+
 #### Propriétés JSON en réponse d'une requête correcte
 
 - `notes` (type: array) : en cas de succès, cette propriété aura pour valeur un tableau
-d’objets respectant le schéma de la table notes. (fourni plus haut)
+d’objets respectant le schéma de la table notes. *(fourni plus haut)*
 
 #### Cas d'erreurs
 
 - Si l’utilisateur n’est pas connecté : retourner un code HTTP 401.
 
+```php
+  public function index(Request $request)
+    {
+        $notes =  Notes::where('user_id', $request->user()->id)->with('user')->orderBy('created_at', 'desc')->get();
+    
+        return response()->json(['notes' => $notes]);
+    }
+```
+
 ### Route GET `/api/notes/{id}`
 
 Cette route permet de récupérer une note existante.
+
+`Route::get('/notes/{id}', 'NotesController@show');`
 
 Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization`.
 
@@ -230,9 +242,6 @@ Le personal access token au format `bearer` de l’utilisateur connecté doit ê
 
 - `id` : identifiant unique de la note à modifier
 
-#### Propriétés JSON attendues dans le corps de la requête
-
-- `content` : contenu de la note saisie par l’utilisateur.
 
 #### Propriétés JSON en réponse d'une requête correcte
 
@@ -240,16 +249,31 @@ Le personal access token au format `bearer` de l’utilisateur connecté doit ê
 
 #### Cas d’erreurs
 
-- si `id` n’est associé à aucune note stockée dans la base de données : rretourner un
+- si `id` n’est associé à aucune note stockée dans la base de données : retourner un
 code HTTP 404.
 - si l’utilisateur n’est pas connecté : retourner un code HTTP 401.
 - si `id` est associé à une note appartenant à un autre utilisateur : retourner un code
 HTTP 403.
 
+```php
+   public function show($id, Request $request)
+    {
+        //
+        $note = Notes::findOrFail($id);
+        if($note->user_id != $request->user()->id){
+            return response(null, 403);
+        }
+        return response()->json(['note' => $note]);
+
+    }
+```
+
 ### Route POST `/api/notes`
 Cette route permet d’ajouter une note.
 
-Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization` .
+`Route::post('/notes', 'NotesController@store');`
+
+Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization`.
 
 #### Propriétés JSON attendues dans le corps de la requête
 
@@ -264,9 +288,31 @@ Le personal access token au format `bearer` de l’utilisateur connecté doit ê
 - si l’utilisateur n’est pas connecté : retourner un code HTTP 401.
 - si `content` est manquant : Retourner un code HTTP 422.
 
-### Route PUT `/api/notes/{id}`
+```php
+  public function store(Request $request, Notes $note)
+    {
+        //
+          $request->validate([
+            'content' => 'required',
+        ]);
+
+        //Création
+        $note = new Notes;
+        $note->user_id = $request->user()->id;
+        $note->content = $request->content;
+        $note->save();
+        $note->with('user')->get();
+
+        //Redirection
+        return response()->json(['note' => $note]);
+    }
+```
+
+### Route PUT ou POST `/api/notes/{id}`
 
 Cette route permet de modifier une note existante.
+
+`Route::post('/notes/{id}', 'NotesController@update');`
 
 Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization` .
 
@@ -291,9 +337,31 @@ code HTTP 404.
 - si `id` est associé à une note appartenant à un autre utilisateur : Retourner un code
 HTTP 403.
 
+```php
+  public function update($id, Request $request, Notes $note)
+    {
+        //
+        $request->validate([
+            'content' => 'required'
+        ]);
+
+        $note = Notes::findOrFail($id);
+        if($note->user_id != $request->user()->id){
+            return response(null, 403);
+        }
+        $note->content = $request->content;
+        $note->save();
+
+       
+        return response()->json(['note' => $note]);
+    }
+```
+
 ### Route DELETE `/api/notes/{id}`
 
 Cette route permet de supprimer une de ses notes.
+
+`Route::delete('/notes/{id}', 'NotesController@destroy');`
 
 Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization` .
 
@@ -313,11 +381,35 @@ code HTTP 404.
 - si `id` est associé à une note appartenant à un autre utilisateur : Retourner un code
 HTTP 403.
 
+```php
+    public function destroy($id, Request $request)
+    {
+        //
+        $note = Notes::findOrFail($id);
+        if($note->user_id != $request->user()->id){
+            return response(null, 403);
+        }
+        $note->delete();
+
+        return response()->json(['message' => 'Note is deleted !']);
+    }
+```
+
 ### Route DELETE `/api/reset`
 
-Pour les besoins des tests HTTP, vous allez devoir créer cette route qui permet de faire un "rest" de la base de données : supprimer tous les utilisateurs, personal access tokens et notes.
+Pour les besoins des tests HTTP, vous allez devoir créer cette route qui permet de faire un "reset" de la base de données : supprimer tous les utilisateurs, personal access tokens et notes.
 
 > Note : Si cette route ne fonctionne pas, alors que les tests http dépendent d'une base de données réinitialisée, tous vos tests seront faux.
+
+`Route::delete('/reset', 'AuthentificationController@reset');`
+
+```php
+    public function reset()
+    {
+        Artisan::call("migrate:refresh", ["--force" => true]);
+        return response()->json(['message' => 'All Account, Token & Notes is deleted ! Reset Base']);
+    }
+```
 
 ## Rendus
 
