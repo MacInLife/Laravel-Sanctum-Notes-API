@@ -31,6 +31,30 @@ l'authentification sur l'application web.
 - Vous devez utiliser la table `personal_access_token` qui contient tous les
 personal access tokens des utilisateurs pour l'authentification via l'API
 
+
+#### A. Création Table `notes`
+  `php artisan make:model Notes -mrc`
+  
+### B. Ajout Authentification `users`
+`composer require laravel/ui --dev`
+`php artisan ui bootstrap --auth`
+`npm install && npm run dev`
+
+#### C. Ajout `personal_access_token`
+`composer require laravel/sanctum`
+`php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"`
+`php artisan migrate`
+
+Ajout dans le model `user`
+```php
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, Notifiable;
+}
+```
+
 ### Schéma de la table notes
 
 Chaque `note` doit contenir les propriétés suivantes :
@@ -43,6 +67,18 @@ l’insertion
   
 Vous devez créer une migration pour la création de cette table dans votre base de données.
 
+  ```php
+    public function up()
+    {
+        Schema::create('notes', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            $table->integer('user_id')->unique()->unsigned();
+            $table->text('content');
+        });
+    }
+  ```
+
 ### Authentification des utilisateurs
 
 L’API doit être state-less. C’est à dire qu’elle ne nécessite pas l’usage de sessions.
@@ -54,6 +90,12 @@ Afin de vérifier l’identité de l’utilisateur derrière chaque appel à l�
 - vérifier la validité du jeton au format `Bearer Token` dans le header HTTP
 `Authorization` de chaque requête.
 
+```php
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+```
+
 ### Interfaces
 
 Les routes doivent être capables d’extraire les paramètres passés dans le corps de chaque requête au format `application/json` .
@@ -63,8 +105,10 @@ La réponse envoyée par chacune de ces routes doit aussi être au format JSON.
 Les propriétés de la réponse JSON sont spécifiées dans chaque route à implémenter, tel
 que décrites ci-dessous :
 
-### Route GET `/api/register`
+### Route POST `/api/register`
 Cette route permet de créer un compte utilisateur, à partir d’un identifiant et mot de passe choisis par l’utilisateur.
+
+`Route::post('/register', 'AuthentificationController@register');`
 
 Une fois le compte créé, un jeton Personal Access Token est généré et retourné pour
 effectuer d’autre requêtes au nom de cet utilisateur.
@@ -77,8 +121,7 @@ effectuer d’autre requêtes au nom de cet utilisateur.
 
 #### Propriétés JSON en réponse d'une requête correcte
 
-- `token` (type: string) : En cas de succès, cette propriété aura pour valeur le Personal
-Access Token généré pour l’utilisateur, en version "plain text".
+- `token` (type: string) : En cas de succès, cette propriété aura pour valeur le Personal Access Token généré pour l’utilisateur, en version "plain text".
 
 #### Cas d’erreurs
 
@@ -89,9 +132,35 @@ Access Token généré pour l’utilisateur, en version "plain text".
 - si `email` est déjà associé à un utilisateur existant en base de données : Retourner
 un code HTTP 422.
 
-### Route GET `/api/login`
+```php
+  public function register(Request $request)
+    {
+        //
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+        $user = new User;
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        $token = $user->createToken('token-register');
+
+        
+        return response()->json(['token' => $token->plainTextToken ]);
+      
+       // return  PersonalAccessToken::with('user')->get()->response(null, 200);
+    }
+```
+
+### Route POST `/api/login`
 Cette route permet à un utilisateur de se connecter à son compte, en fournissant son
 identifiant et son mot de passe.
+
+`Route::post('/login', 'AuthentificationController@login');`
 
 Une fois le compte créé, un jeton Personal Access Token est généré et retourné pour
 effectuer d’autre requêtes au nom de cet utilisateur.
@@ -112,9 +181,33 @@ adresse e-mail est inconnue" et retourner un code HTTP 422.
 - si `password` ne correspond pas à l'adresse e-mail du compte : "Identifiants
 incorrects" et retourner un code HTTP 422.
 
+```php
+  public function login(Request $request)
+    {
+        //
+            $request->validate([
+                'email' => 'required|email',
+                'password' => 'required',
+            ]);
+        
+            $user = User::where('email', $request->email)->first();
+        
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                throw ValidationException::withMessages([
+                    'email' => ['The provided credentials are incorrect.'],
+                ]);
+            }
+            $token = $user->createToken('token-login')->plainTextToken;
+            return response()->json(['token' => $token ]);
+    
+    }
+```
+
 ### Route GET `/api/notes`
 
 Cette route permet de lister ses notes, dans l’ordre anti-chronologique de création.
+
+`Route::get('/notes', 'NotesController@index');`
 
 Le personal access token au format `bearer` de l’utilisateur connecté doit être fourni dans le header HTTP `Authorization` .
 

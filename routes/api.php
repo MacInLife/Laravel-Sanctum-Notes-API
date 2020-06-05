@@ -14,6 +14,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::group(['middleware' => ['auth:sanctum']], function (){
+   //Routes notes
+   Route::get('/notes', 'NotesController@index');
+});
+//Pas de verif Auth
+Route::post('/register', 'AuthentificationController@register');
+Route::post('/login', 'AuthentificationController@login');
