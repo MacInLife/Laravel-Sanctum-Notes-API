@@ -1,80 +1,62 @@
-<p align="center"><img src="https://res.cloudinary.com/dtfbvvkyp/image/upload/v1566331377/laravel-logolockup-cmyk-red.svg" width="400"></p>
+# Laravel Notes API Sanctum
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+L’objectif est d’écrire et de mettre en production une API HTTP de gestion de notes personnelles. Cette API sera le back-end d’une application mobile (l'application mobile n'est pas à rendre).
 
-## About Laravel
+## Cahier des charges
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Afin de vérifier son bon fonctionnement, ainsi que le respect du cahier des charges et des critères d’évaluation fournis ci-dessous, le code source rendu sera exécuté et vérifié par une suite de tests automatisés écrits par l’enseignant.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+> Attention : Sachant que ces fonctionnalités seront vérifiées par des tests automatisés, merci de respecter ces spécifications à la lettre. Ceci inclut notamment : le nom des routes, la structure des objets JSON à produire, les chaines de caractères fournies…
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Spécifications fonctionnelles
 
-## Learning Laravel
+Lors de son utilisation par une application cliente, l’API à fournir devra permettre à chaque utilisateur de l’application de :
+- Créer un compte en fournissant un identifiant et mot de passe Se connecter à l’aide de son identifiant et mot de passe
+- Retrouver ses notes, dans l’ordre anti-chronologique, avec leur date de création et de mise à jour
+- Afficher une note
+- Créer une nouvelle note Modifier une note Supprimer une note
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Les notes seront à stocker en tant que texte brut (c.a.d. non HTML) et doivent pouvoir contenir des sauts de ligne, ainsi que n’importe quel caractère Unicode. (accents, emoji…)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Spécifications techniques
 
-## Laravel Sponsors
+### Modèle de données**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Toutes les données manipulées par l’API doivent être stockées dans une base de données.
+- Vous devez créer la table `notes` qui contient toutes les notes.
+- Vous devez utiliser la table `users` qui contient tous les utilisateurs pour
+l'authentification sur l'application web.
+- Vous devez utiliser la table `personal_access_token` qui contient tous les
+personal access tokens des utilisateurs pour l'authentification via l'API
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
-- [We Are The Robots Inc.](https://watr.mx/)
-- [Understand.io](https://www.understand.io/)
-- [Abdel Elrafa](https://abdelelrafa.com)
-- [Hyper Host](https://hyper.host)
-- [Appoly](https://www.appoly.co.uk)
-- [OP.GG](https://op.gg)
-- [云软科技](http://www.yunruan.ltd/)
+### Schéma de la table notes
 
-## Contributing
+Chaque `note` doit contenir les propriétés suivantes :
+- `id` (type : integer) : identifiant unique de la note, généré automatiquement lors de
+l’insertion
+- `user_id` (type: int) : identifiant unique de l'utilisateur qui a créé la note
+- `content` (type : string) : contenu textuel de la note
+- `created_at` (type : date): date et heure à laquelle la note a été créé
+- `updated_at` (type : date): date et heure à laquelle la note a été mise à jour pour la dernière fois.
+  
+Vous devez créer une migration pour la création de cette table dans votre base de données.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Authentification des utilisateurs
 
-## Code of Conduct
+L’API doit être state-less. C’est à dire qu’elle ne nécessite pas l’usage de sessions.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Au lieu de cela, l’identification des utilisateurs sera assurée par l’usage de jetons Personal Access Token (SWT : Simple Web Tokens) grâce au package [Laravel Sanctum](https://laravel.com/docs/7.x/sanctum).
 
-## Security Vulnerabilities
+Afin de vérifier l’identité de l’utilisateur derrière chaque appel à l’API, celle-ci devra :
+- émettre un jeton Personal Access Token lorsque l’utilisateur s’identifiera
+- vérifier la validité du jeton au format `Bearer` dans le header HTTP
+`Authorization` de chaque requête.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Interfaces
 
-## License
+Les routes doivent être capables d’extraire les paramètres passés dans le corps de chaque requête au format `application/json` .
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# Laravel-Sanctum-Notes-API
+La réponse envoyée par chacune de ces routes doit aussi être au format JSON.
+
+Les propriétés de la réponse JSON sont spécifiées dans chaque route à implémenter, tel
+que décrites ci-dessous :
