@@ -14,7 +14,9 @@ Lors de son utilisation par une application cliente, l’API à fournir devra pe
 - Créer un compte en fournissant un identifiant et mot de passe Se connecter à l’aide de son identifiant et mot de passe
 - Retrouver ses notes, dans l’ordre anti-chronologique, avec leur date de création et de mise à jour
 - Afficher une note
-- Créer une nouvelle note Modifier une note Supprimer une note
+- Créer une nouvelle note 
+- Modifier une note 
+- Supprimer une note
 
 Les notes seront à stocker en tant que texte brut (c.a.d. non HTML) et doivent pouvoir contenir des sauts de ligne, ainsi que n’importe quel caractère Unicode. (accents, emoji…)
 
@@ -49,7 +51,7 @@ Au lieu de cela, l’identification des utilisateurs sera assurée par l’usage
 
 Afin de vérifier l’identité de l’utilisateur derrière chaque appel à l’API, celle-ci devra :
 - émettre un jeton Personal Access Token lorsque l’utilisateur s’identifiera
-- vérifier la validité du jeton au format `Bearer` dans le header HTTP
+- vérifier la validité du jeton au format `Bearer Token` dans le header HTTP
 `Authorization` de chaque requête.
 
 ### Interfaces
@@ -223,8 +225,6 @@ HTTP 403.
 Pour les besoins des tests HTTP, vous allez devoir créer cette route qui permet de faire un "rest" de la base de données : supprimer tous les utilisateurs, personal access tokens et notes.
 
 > Note : Si cette route ne fonctionne pas, alors que les tests http dépendent d'une base de données réinitialisée, tous vos tests seront faux.
-
-
 
 ## Rendus
 
