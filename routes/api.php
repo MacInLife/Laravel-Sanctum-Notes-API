@@ -23,11 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::group(['middleware' => ['auth:sanctum']], function (){
    //Routes notes
-   Route::apiResource('/notes', 'NotesController');
-   Route::get('/notes', 'NotesController@index');
-   Route::get('/notes/{id}', 'NotesController@show');
-   Route::post('/notes', 'NotesController@store');
-   Route::post('/notes/{id}', 'NotesController@update');
+   Route::apiResource('/notes', 'NotesController')->only(['index', 'show', 'store']);
+//    Route::get('/notes', 'NotesController@index');
+//    Route::get('/notes/{id}', 'NotesController@show');
+//    Route::post('/notes', 'NotesController@store');
+   Route::put('/notes/{id}', 'NotesController@update');
    Route::delete('/notes/{id}', 'NotesController@destroy');
  
 });
