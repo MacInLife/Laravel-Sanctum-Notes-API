@@ -15,7 +15,7 @@ class NotesController extends Controller
     public function index(Request $request)
     {
         $notes =  Notes::where('user_id', $request->user()->id)->with('user')->orderBy('created_at', 'desc')->get();
-    
+
         return response()->json(['notes' => $notes]);
     }
 
@@ -35,10 +35,10 @@ class NotesController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request, Notes $note)
+    public function store(Request $request)
     {
         //
-         $request->validate([
+        $request->validate([
             'content' => 'required',
         ]);
 
@@ -63,11 +63,10 @@ class NotesController extends Controller
     {
         //
         $note = Notes::findOrFail($id);
-        if($note->user_id != $request->user()->id){
+        if ($note->user_id != $request->user()->id) {
             return response(null, 403);
         }
         return response()->json(['note' => $note]);
-
     }
 
     /**
@@ -96,13 +95,13 @@ class NotesController extends Controller
         ]);
 
         $note = Notes::findOrFail($id);
-        if($note->user_id != $request->user()->id){
+        if ($note->user_id != $request->user()->id) {
             return response(null, 403);
         }
         $note->content = $request->content;
         $note->save();
 
-       
+
         return response()->json(['note' => $note]);
     }
 
@@ -116,7 +115,7 @@ class NotesController extends Controller
     {
         //
         $note = Notes::findOrFail($id);
-        if($note->user_id != $request->user()->id){
+        if ($note->user_id != $request->user()->id) {
             return response(null, 403);
         }
         $note->delete();
